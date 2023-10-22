@@ -1,0 +1,21 @@
+{
+    "name": "ternaryop/tumtum",
+    "description": "Tumblr API",
+    "type": "library",
+    "require": {
+        "ternaryop/tiny-oauth": "^1.0",
+        "ext-curl": "*"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ternaryop\\TumTum\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Davide Ficano",
+            "email": "davide.ficano@gmail.com"
+        }
+    ]
+}
