@@ -1,7 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ternaryop\TumTum;
 
+/**
+ * @param array<string, mixed> $json
+ * @param string $v
+ * @param bool $defaultValue
+ * @return bool
+ */
 function optBoolean(array $json, string $v, bool $defaultValue): bool {
   if (isset($json[$v])) {
     return $json[$v];
@@ -9,6 +17,12 @@ function optBoolean(array $json, string $v, bool $defaultValue): bool {
   return $defaultValue;
 }
 
+/**
+ * @param array<string, mixed> $json
+ * @param string $v
+ * @param string|null $defaultValue
+ * @return string|null
+ */
 function optString(array $json, string $v, ?string $defaultValue): ?string {
   if (isset($json[$v])) {
     return $json[$v];
@@ -16,6 +30,12 @@ function optString(array $json, string $v, ?string $defaultValue): ?string {
   return $defaultValue;
 }
 
+/**
+ * @param array<string, mixed> $json
+ * @param string $v
+ * @param int $defaultValue
+ * @return int
+ */
 function optLong(array $json, string $v, int $defaultValue): int {
   if (isset($json[$v])) {
     return $json[$v];
@@ -44,12 +64,21 @@ class TumblrPost {
   // queue posts
   public int $scheduledPublishTime = 0;
 
+  /** @var array<string> */
   public array $tags = array();
 
+  /**
+   * @param array<string, mixed> $json
+   * @return TumblrPost
+   */
   public static function createFromJson(array $json): TumblrPost {
     return (new TumblrPost())->fromJson($json);
   }
 
+  /**
+   * @param array<string, mixed> $json
+   * @return $this
+   */
   public function fromJson(array $json): TumblrPost {
     $this->blogName = $json['blog_name'];
     $this->postId = $json['id'];
@@ -127,6 +156,10 @@ class TumblrPost {
     $this->tags = TumblrPost::tagsFromString($str);
   }
 
+  /**
+   * @param string $str
+   * @return array<string>
+   */
   static function tagsFromString(string $str): array {
     $arr = array();
     foreach (explode(",", $str) as $s) {

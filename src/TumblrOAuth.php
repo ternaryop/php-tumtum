@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ternaryop\TumTum;
 
 use Ternaryop\TinyOAuth\OAuthConsumer;
@@ -24,6 +26,8 @@ class TumblrOAuth {
   private OAuthToken $access_token;
   private string $oauth_token;
   private OAuthSignatureMethod $sig_method;
+
+  /** @var array<string, mixed> */
   private array $oauth_params; // array containing parameters to pass to oauth request
   private TumblrConfig $config;
 
@@ -39,7 +43,11 @@ class TumblrOAuth {
   }
 
   /**
-   * @return array an array containing 'status' (HTTP code) and result (the result)
+   * @param string $url
+   * @param array<string, mixed> $params
+   * @return array{'status': int, 'result': string} 'status' (HTTP code) and result (the result)
+   * /*
+   * @throws TumblrException
    */
   public static function do_request(string $url, array $params): array {
     $request_data = http_build_query($params);
@@ -50,17 +58,24 @@ class TumblrOAuth {
     curl_setopt($c, CURLOPT_POST, true);
     curl_setopt($c, CURLOPT_POSTFIELDS, $request_data);
     curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    /** @var string|false $result */
     $result = curl_exec($c);
     $status = curl_getinfo($c, CURLINFO_HTTP_CODE);
     curl_close($c);
 
-    return array('status' => $status,
-      'result' => $result);
+    if ($result === false) {
+      throw new TumblrException("Unable to obtain result from $url");
+    }
+
+    return array(
+      'status' => $status,
+      'result' => $result
+    );
   }
 
   /**
    * Make an authorize oAuth request
-   * @param array $params containing parameters to pass to authorize request
+   * @param array<string, mixed> $params containing parameters to pass to authorize request
    * @return string the authorized url to call
    * @throws TumblrException
    * @throws OAuthException
@@ -78,8 +93,15 @@ class TumblrOAuth {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $url
+   * @param OAuthConsumer $consumer
+   * @param OAuthToken|null $token
+   * @param array<string, mixed> $params
+   * @param bool $parse_response
+   * @param string $http_method
+   * @return array<string, mixed>
    * @throws OAuthException
+   * @throws TumblrException
    */
   protected static function oauth_request(
     string        $url,
@@ -107,8 +129,10 @@ class TumblrOAuth {
   }
 
   /**
-   * @throws TumblrException
+   * @param array<string, mixed> $params
+   * @return array<string, mixed>
    * @throws OAuthException
+   * @throws TumblrException
    */
   static function access(array $params): array {
     $request_token = $_SESSION[REQUEST_TOKEN];
@@ -125,8 +149,12 @@ class TumblrOAuth {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $url
+   * @param array<string, mixed> $params
+   * @param string $http_method
+   * @return array<string, mixed>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function do_logged_request(string $url, array $params, string $http_method = 'POST'): array {
     $params = array_merge($params, $this->oauth_params);
@@ -138,8 +166,11 @@ class TumblrOAuth {
   }
 
   /**
-   * @throws TumblrException
+   * @param OAuthRequest $oauth_req
+   * @param string $http_method
+   * @return array<string, mixed>
    * @throws OAuthException
+   * @throws TumblrException
    */
   protected static function executeOAuthRequest(OAuthRequest $oauth_req, string $http_method): array {
     $ch = curl_init();
@@ -164,6 +195,8 @@ class TumblrOAuth {
   }
 
   /**
+   * @param array<string, mixed> $json
+   * @return array<string, mixed>
    * @throws TumblrException
    */
   static function checkResult(array $json): array {
@@ -183,6 +216,10 @@ class TumblrOAuth {
     return $json;
   }
 
+  /**
+   * @param array<string, mixed> $json
+   * @return string|null
+   */
   static function getErrorFromResponse(array $json): string|null {
     if (isset($json["response"])) {
       $arr = $json["response"];

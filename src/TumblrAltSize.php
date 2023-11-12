@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ternaryop\TumTum;
 
 const IMAGE_WIDTH_1280 = 1280;
@@ -13,10 +15,18 @@ class TumblrAltSize {
   public int $height;
   public string $url;
 
+  /**
+   * @param array<string, mixed> $json
+   * @return TumblrAltSize
+   */
   public static function createFromJson(array $json): TumblrAltSize {
     return (new TumblrAltSize())->fromJson($json);
   }
 
+  /**
+   * @param array<string, mixed> $json
+   * @return TumblrAltSize
+   */
   public function fromJson(array $json): TumblrAltSize {
     $this->width = $json['width'];
     $this->height = $json['height'];

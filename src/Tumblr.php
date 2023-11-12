@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ternaryop\TumTum;
 
 use Ternaryop\TinyOAuth\OAuthException;
@@ -19,8 +21,9 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @return array<TumblrBlog>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function blogs(): array {
     $apiUrl = API_PREFIX . "/user/info";
@@ -37,8 +40,11 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @param array<string, mixed> $params
+   * @return array<TumblrPhotoPost>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function getPublicPosts(string $blogName, array $params): array {
     $modifiedParams = $params;
@@ -60,11 +66,11 @@ class Tumblr {
   }
 
   /**
-   * @param array $json
-   * @return TumblrPhotoPost|TumblrPost
+   * @param array<string, mixed> $json
+   * @return TumblrPhotoPost
    * @throws TumblrException if type differs from 'photo'
    */
-  static function build(array $json): TumblrPhotoPost|TumblrPost {
+  static function build(array $json): TumblrPhotoPost {
     $type = $json["type"];
 
     if ($type != "photo") {
@@ -75,6 +81,9 @@ class Tumblr {
   }
 
   /**
+   * @param string $blogName
+   * @param array<string, mixed> $params
+   * @return array<TumblrPhotoPost>
    * @throws TumblrException
    */
   function getPublicPostsNoOAuth(string $blogName, array $params): array {
@@ -95,7 +104,7 @@ class Tumblr {
 
   /**
    * Return the post type contained into params (if any) prepended by "/" url path separator
-   * @param array $params API params
+   * @param array<string, mixed> $params API params
    * @return string the "/" + type or empty string if not present
    */
   function getPostTypeAsUrlPath(array $params): string {
@@ -109,8 +118,8 @@ class Tumblr {
   /**
    * Do not involve signed oAuth call, this is used to make public tumblr API requests
    * @param string $url the public url
-   * @param array $params query parameters
-   * @return array the json map
+   * @param array<string, mixed> $params query parameters
+   * @return array<string, mixed> the json map
    * @throws TumblrException
    */
   function publicJsonFromGet(string $url, array $params): array {
@@ -118,13 +127,20 @@ class Tumblr {
     foreach ($params as $key => $value) {
       $sbUrl .= "&" . $key . "=" . $value;
     }
-    $json = json_decode(file_get_contents($sbUrl), true);
+    $contents = file_get_contents($sbUrl);
+    if ($contents === false) {
+      throw new TumblrException("Unable to read from $url");
+    }
+    $json = json_decode($contents, true);
     return $this->tumblrOAuth->checkResult($json);
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @param array<string, mixed>|null $params
+   * @return array<string, mixed>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function createPost(string $blogName, ?array $params): array {
     $all_params = array();
@@ -135,8 +151,10 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @return array<string, mixed>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function draft(string $blogName): array {
     $all_params = array();
@@ -144,8 +162,11 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @param int $maxTimestamp
+   * @return array<TumblrPhotoPost>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function getDraftPosts(string $blogName, int $maxTimestamp): array {
     $apiUrl = Tumblr::getApiUrl($blogName, "/posts/draft");
@@ -168,9 +189,9 @@ class Tumblr {
 
   /**
    * Add to list the posts with timestamp greater than maxTimestamp (ie newer posts)
-   * @param $list array the destination list
-   * @param $jsonPosts array the json array containing posts
-   * @param $maxTimestamp int the max timestamp expressed in seconds
+   * @param array<TumblrPhotoPost> $list the destination list
+   * @param array<array<string, mixed>> $jsonPosts the json array containing posts
+   * @param int $maxTimestamp the max timestamp expressed in seconds
    * @return bool true if all posts in jsonPosts are newer, false otherwise
    * @throws TumblrException
    */
@@ -187,8 +208,10 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @return array<TumblrPhotoPost>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function queueAll(string $blogName): array {
     $list = [];
@@ -205,8 +228,11 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @param array<string, mixed> $params
+   * @return array<TumblrPhotoPost>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function queue(string $blogName, array $params): array {
     $apiUrl = Tumblr::getApiUrl($blogName, "/posts/queue");
@@ -220,6 +246,9 @@ class Tumblr {
   }
 
   /**
+   * @param array<TumblrPhotoPost> $list
+   * @param array<string, mixed> $arr
+   * @return void
    * @throws TumblrException
    */
   function addPostsToList(array &$list, array $arr): void {
@@ -229,8 +258,11 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @param array<string, mixed> $params
+   * @return array<TumblrPhotoPost>
    * @throws OAuthException
+   * @throws TumblrException
    */
   function getPhotoPosts(string $blogName, array $params): array {
     $apiUrl = Tumblr::getApiUrl($blogName, "/posts/photo");
@@ -250,8 +282,11 @@ class Tumblr {
   }
 
   /**
-   * @throws TumblrException
+   * @param string $blogName
+   * @param array<string, mixed> $args
+   * @return int
    * @throws OAuthException
+   * @throws TumblrException
    */
   function schedulePost(string $blogName, array $args): int {
     $apiUrl = Tumblr::getApiUrl($blogName, "/post/edit");

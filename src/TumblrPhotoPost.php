@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ternaryop\TumTum;
 
 class TumblrPhotoPost extends TumblrPost {
+  /** @var array<TumblrPhoto> */
   public array $photos = array();
   public string $caption = "";
 
@@ -48,6 +51,9 @@ class TumblrPhotoPost extends TumblrPost {
     return null;
   }
 
+  /**
+   * @return array<TumblrAltSize>|null
+   */
   public function firstPhotoAltSize(): ?array {
     if (empty($this->photos)) {
       return null;
